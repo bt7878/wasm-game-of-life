@@ -17,7 +17,6 @@ pub struct Universe {
     cells: Vec<Cell>,
 }
 
-#[wasm_bindgen]
 impl Universe {
     fn get_index(&self, row: u32, column: u32) -> usize {
         (row * self.width + column) as usize
@@ -39,7 +38,10 @@ impl Universe {
         }
         count
     }
+}
 
+#[wasm_bindgen]
+impl Universe {
     pub fn tick(&mut self) {
         let mut next = vec![Cell::Dead; self.cells.len()];
 
@@ -98,6 +100,16 @@ impl Universe {
     pub fn cells(&self) -> *const Cell {
         self.cells.as_ptr()
     }
+
+    pub fn set_width(&mut self, width: u32) {
+        self.width = width;
+        self.cells = (0..width * self.height).map(|_| Cell::Dead).collect();
+    }
+
+    pub fn set_height(&mut self, height: u32) {
+        self.height = height;
+        self.cells = (0..self.width * height).map(|_| Cell::Dead).collect();
+    }
 }
 
 impl fmt::Display for Universe {
@@ -111,5 +123,18 @@ impl fmt::Display for Universe {
         }
 
         Ok(())
+    }
+}
+
+impl Universe {
+    pub fn get_cells(&self) -> &[Cell] {
+        return &self.cells;
+    }
+
+    pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells {
+            let i = self.get_index(*row, *col);
+            self.cells[i] = Cell::Alive;
+        }
     }
 }
