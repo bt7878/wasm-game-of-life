@@ -27,13 +27,57 @@ if (ctx === null) {
   throw new Error("Failed to get rendering context");
 }
 
+let animationID: number | null = null;
+
+const isPaused = () => {
+  return animationID === null;
+};
+
+const playPauseButton = document.getElementById("play-pause");
+const clearButton = document.getElementById("clear");
+
+if (playPauseButton === null) {
+  throw new Error("Could not find play-pause button");
+}
+
+if (clearButton === null) {
+  throw new Error("Could not find clear button");
+}
+
+const play = () => {
+  playPauseButton.textContent = "⏸";
+  renderLoop();
+};
+
+const pause = () => {
+  if (animationID !== null) {
+    playPauseButton.textContent = "▶";
+    cancelAnimationFrame(animationID);
+    animationID = null;
+  }
+};
+
+playPauseButton.addEventListener("click", (_) => {
+  if (isPaused()) {
+    play();
+  } else {
+    pause();
+  }
+});
+
+clearButton.addEventListener("click", (_) => {
+  universe.clear();
+  drawGrid();
+  drawCells();
+});
+
 const renderLoop = () => {
   universe.tick();
 
   drawGrid();
   drawCells();
 
-  requestAnimationFrame(renderLoop);
+  animationID = requestAnimationFrame(renderLoop);
 };
 
 const drawGrid = () => {
@@ -81,6 +125,20 @@ const drawCells = () => {
   ctx.stroke();
 };
 
+canvas.addEventListener("click", (event) => {
+  const boundingRect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / boundingRect.width;
+  const scaleY = canvas.height / boundingRect.height;
+  const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
+  const canvasTop = (event.clientY - boundingRect.top) * scaleY;
+  const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
+  const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+
+  universe.toggle_cell(row, col);
+  drawGrid();
+  drawCells();
+});
+
 drawGrid();
 drawCells();
-requestAnimationFrame(renderLoop);
+play();
